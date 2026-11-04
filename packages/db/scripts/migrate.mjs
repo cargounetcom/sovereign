@@ -4,9 +4,11 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
+import dotenv from 'dotenv';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const dir = join(root, 'db', 'migrations');
+dotenv.config({ path: join(root, '.env') });
 const url = process.env.DATABASE_URL;
 if (!url) {
   console.error('DATABASE_URL is not set');

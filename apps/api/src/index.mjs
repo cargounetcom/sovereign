@@ -1,10 +1,16 @@
 // SOVEREIGN API — Postgres main. Serves clinic app data.
 // Login: demo only (doctor/test123 + DEMO clinic). Real auth = later task.
 import express from 'express';
+import dotenv from 'dotenv';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { checkDb, listPatients, listAppointments, createAppointment } from '@sovereign/db/dist/index.js';
 
 const app = express();
 app.use(express.json());
+
+const apiRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+dotenv.config({ path: join(apiRoot, '.env') });
 
 const PORT = Number(process.env.API_PORT || 3001);
 const DEMO_CLINIC = 'DEMO';

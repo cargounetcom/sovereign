@@ -18,7 +18,8 @@
     "dev:api": "npm run dev --workspace @sovereign/api",
     "start:api": "npm run start --workspace @sovereign/api",
     "db:migrate": "npm run migrate --workspace @sovereign/db",
-    "db:check": "npm run check --workspace @sovereign/db"
+    "db:check": "npm run check --workspace @sovereign/db",
+    "db:build": "npm run build --workspace @sovereign/db"
   },
   "devDependencies": {
     "turbo": "^2.3.0"
