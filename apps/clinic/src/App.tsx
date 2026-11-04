@@ -1,44 +1,55 @@
 import { useState } from 'react';
+import { apiLogin, apiPatients, type Patient } from './api';
 
-// TAS10: mock login only. No DB, no real patients. Postgres = plan only.
-const TEST_USER = { login: 'doctor', password: 'test123' };
-
+// TAS12-db: Postgres main via API. Mocks = fallback if API offline.
 export default function App() {
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const [authed, setAuthed] = useState(false);
   const [error, setError] = useState('');
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [source, setSource] = useState('');
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (login === TEST_USER.login && password === TEST_USER.password) {
+    const r = await apiLogin(login, password);
+    if (r.ok) {
       setAuthed(true);
       setError('');
+      const p = await apiPatients();
+      setPatients(p.data);
+      setSource(p.source);
     } else {
-      setError('Wrong login or password (hint: doctor / test123)');
+      setError(r.error || 'login failed');
     }
   }
 
   if (authed) {
     return (
       <main style={{ fontFamily: 'system-ui', padding: 32 }}>
-        <h1>Sovereign Clinic — dashboard (mock)</h1>
-        <p>Logged in as <b>{login}</b>. Test patient only: Test Test, 1990-01-01.</p>
-        <button onClick={() => { setAuthed(false); setLogin(''); setPassword(''); }}>Logout</button>
+        <h1>Sovereign Clinic — dashboard</h1>
+        <p>Logged in as <b>{login}</b>. Source: <b>{source}</b></p>
+        <h2>Patients</h2>
+        <ul>
+          {patients.map((p) => (
+            <li key={p.id}>{p.full_name} — {p.dob}</li>
+          ))}
+        </ul>
+        <button onClick={() => { setAuthed(false); setLogin(''); setPassword(''); setPatients([]); }}>Logout</button>
       </main>
     );
   }
 
   return (
     <main style={{ fontFamily: 'system-ui', padding: 32, maxWidth: 360 }}>
-      <h1>Sovereign Clinic — login (mock)</h1>
+      <h1>Sovereign Clinic — login</h1>
       <form onSubmit={submit}>
         <div><input placeholder="login" value={login} onChange={(e) => setLogin(e.target.value)} /></div>
         <div><input placeholder="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} /></div>
         {error && <p style={{ color: 'red' }}>{error}</p>}
         <button type="submit">Sign in</button>
       </form>
-      <p style={{ opacity: 0.6 }}>TAS10 mock: doctor / test123. No DB connected.</p>
+      <p style={{ opacity: 0.6 }}>doctor / test123. Postgres main, mocks fallback.</p>
     </main>
   );
 }

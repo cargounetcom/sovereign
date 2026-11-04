@@ -1,0 +1,14 @@
+{
+  "name": "@sovereign/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch ./src/index.mjs",
+    "start": "node ./src/index.mjs"
+  },
+  "dependencies": {
+    "@sovereign/db": "0.1.0",
+    "express": "^4.21.2"
+  }
+}
