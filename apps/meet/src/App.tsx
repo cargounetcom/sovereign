@@ -1,7 +1,10 @@
 import { useState } from 'react';
 
 // TAS11: mock login only. No DB, no real patients.
-const TEST_USER = { login: 'doctor', password: 'test123' };
+// TODO(TAS15): replace this mock login with the real API auth flow.
+const DEMO_LOGIN = import.meta.env.VITE_DEMO_LOGIN || '';
+const DEMO_PASSWORD = import.meta.env.VITE_DEMO_PASSWORD || '';
+const DEMO_ENABLED = !import.meta.env.PROD && Boolean(DEMO_LOGIN && DEMO_PASSWORD);
 
 export default function App() {
   const [login, setLogin] = useState('');
@@ -11,11 +14,15 @@ export default function App() {
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (login === TEST_USER.login && password === TEST_USER.password) {
+    if (!DEMO_ENABLED) {
+      setError('Demo login is disabled in this environment.');
+      return;
+    }
+    if (login === DEMO_LOGIN && password === DEMO_PASSWORD) {
       setAuthed(true);
       setError('');
     } else {
-      setError('Wrong login or password (hint: doctor / test123)');
+      setError('Wrong login or password.');
     }
   }
 
@@ -38,7 +45,7 @@ export default function App() {
         {error && <p style={{ color: 'red' }}>{error}</p>}
         <button type="submit">Sign in</button>
       </form>
-      <p style={{ opacity: 0.6 }}>TAS11 mock: doctor / test123. No DB connected.</p>
+      <p style={{ opacity: 0.6 }}>Demo login is configured in the environment. No DB connected.</p>
     </main>
   );
 }

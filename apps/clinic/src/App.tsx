@@ -49,7 +49,7 @@ export default function App() {
         {error && <p style={{ color: 'red' }}>{error}</p>}
         <button type="submit">Sign in</button>
       </form>
-      <p style={{ opacity: 0.6 }}>doctor / test123. Postgres main, mocks fallback.</p>
+      <p style={{ opacity: 0.6 }}>Demo login is configured in the API environment. Postgres main.</p>
     </main>
   );
 }

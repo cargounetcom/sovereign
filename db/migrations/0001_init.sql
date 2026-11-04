@@ -47,8 +47,8 @@ CREATE TABLE IF NOT EXISTS prescriptions (
 );
 CREATE INDEX IF NOT EXISTS prescriptions_clinic_idx ON prescriptions (clinic_code);
 
--- Seed: demo clinic + demo doctor (login doctor / test123 hash placeholder) + test patient.
--- Password hash MUST be replaced with a real bcrypt hash before production use.
+-- Seed: demo clinic + test patient. Doctor seed is intentionally omitted.
+-- Never seed a real password hash into a migration; use a controlled bootstrap step.
 INSERT INTO clinics (clinic_code, name) VALUES ('DEMO', 'Demo Clinic')
 ON CONFLICT (clinic_code) DO NOTHING;
 

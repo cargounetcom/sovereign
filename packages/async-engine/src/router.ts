@@ -35,7 +35,7 @@ export async function routeAll(now = new Date()): Promise<RouteOutcome> {
       const detail = await fn(job);
       ran.push({ jobId: job.id, ok: true, finishedAt: new Date().toISOString(), detail });
     } catch (err) {
-      ran.push({ jobId: job.id, ok: false, finishedAt: new Date().toISOString(), detail: String(err) });
+      ran.push({ jobId: job.id, ok: false, finishedAt: new Date().toISOString(), detail: 'handler_failed' });
     }
   }
   return { ran, deferred };

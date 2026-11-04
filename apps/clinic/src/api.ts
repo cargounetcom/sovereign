@@ -18,10 +18,8 @@ export async function apiLogin(login: string, password: string): Promise<{ ok: b
     const j = await r.json();
     return j.ok ? { ok: true } : { ok: false, error: j.error || 'login failed' };
   } catch {
-    // API down = fallback to local mock login (demo only)
-    return login === 'doctor' && password === 'test123'
-      ? { ok: true }
-      : { ok: false, error: 'API offline + wrong mock credentials (doctor / test123)' };
+    // TODO(TAS15): replace mock fallback with a real offline/auth strategy.
+    return { ok: false, error: 'API offline' };
   }
 }
 

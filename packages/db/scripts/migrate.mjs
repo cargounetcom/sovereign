@@ -34,7 +34,8 @@ for (const f of files) {
     n++;
   } catch (err) {
     await pool.query('ROLLBACK');
-    console.error('FAILED ' + f + ': ' + String(err));
+    const code = err && typeof err === 'object' && 'code' in err ? String(err.code) : 'unknown';
+    console.error('FAILED ' + f + ' (' + code + ')');
     process.exitCode = 1;
     break;
   }
