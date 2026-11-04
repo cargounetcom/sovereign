@@ -9,3 +9,6 @@ out/
 coverage/
 .DS_Store
 *.log
+
+# tsc leftovers next to tsx
+apps/clinic/src/*.js
