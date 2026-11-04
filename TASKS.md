@@ -3,7 +3,6 @@
 ## TODO
 
 ## DOING
-- [ ] TAS12-db: Postgres main (boss decision). Schema + clinic connect + .env.example
 
 ## DONE
 - [x] Decide DB strategy: Postgres main, SQLite WASM fallback/demo only (boss choice)
@@ -14,3 +13,4 @@
 - [x] TAS11: root pkg+turbo, meet 5176, medprom 5177, push
 - [x] TAS12-eng: async-engine queue router night-shift tested
 - [x] TAS13: README project map + run instructions
+- [x] TAS12-db: Postgres main — schema, api, clinic connect, .env.example

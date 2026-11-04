@@ -11,14 +11,17 @@ Clinic system. Test patient only: Test Test, 1990-01-01. No real patients.
 | `apps/medprom` | Medprom app, Vite+React, port **5177**, mock login `doctor / test123` |
 | `packages/async-engine` | In-memory job queue + router + night window 23:00-06:00 |
 | `packages/ui` | Empty, reserved for shared components |
-| `src/data/mockData.ts` | Mock code files, models, providers |
+| `src/data/mockData.ts` | Fallback/demo mocks (Postgres main) |
 | `src/services/sqliteWasm.ts` | Browser-local SQLite (sql.js), cache only |
 | `docs-POSTGRES-PLAN.md` | Postgres plan — PLAN ONLY, no code changed |
 
 ## Run
 
 ```bash
+cp .env.example .env  # fill DATABASE_URL
 npm install          # root (turbo)
+npm run db:migrate     # apply schema (needs Postgres)
+npm run dev:api        # API :3001
 npm run dev          # all 3 apps: 5175 + 5176 + 5177
 npm run dev:clinic   # clinic only
 npm run dev:meet     # meet only
