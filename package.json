@@ -1,0 +1,19 @@
+{
+  "name": "sovereign",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:clinic": "npm run dev --workspace @sovereign/clinic",
+    "dev:meet": "npm run dev --workspace @sovereign/meet",
+    "dev:medprom": "npm run dev --workspace @sovereign/medprom",
+    "build": "turbo run build",
+    "build:clinic": "npm run build --workspace @sovereign/clinic",
+    "build:meet": "npm run build --workspace @sovereign/meet",
+    "build:medprom": "npm run build --workspace @sovereign/medprom"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0"
+  }
+}

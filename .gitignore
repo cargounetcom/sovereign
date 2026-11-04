@@ -12,3 +12,7 @@ coverage/
 
 # tsc leftovers next to tsx
 apps/clinic/src/*.js
+
+# tsc leftovers
+apps/meet/src/*.js
+apps/medprom/src/*.js
