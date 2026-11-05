@@ -74,9 +74,10 @@ export async function getSqliteWasmDb(): Promise<SqlJsDatabase> {
     isInitializing = false;
     return dbInstance;
   } catch (error) {
-    console.error("Failed to load SQLite Wasm via CDN, falling back to local memory simulation", error);
+    // Log diagnostics locally only; callers receive a generic code, never internal text.
+    console.error("[sqlite-wasm] getSqliteWasmDb failed", error);
     isInitializing = false;
-    throw error;
+    throw new Error("wasm_init_failed");
   }
 }
 
@@ -104,9 +105,10 @@ export async function executeWasmSql(sql: string): Promise<SqlQueryResult> {
       elapsedMs,
       rowCount: first.values.length
     };
-  } catch (err: any) {
-    const elapsedMs = Math.round((performance.now() - startTime) * 100) / 100;
-    throw new Error(err.message || String(err));
+  } catch (err) {
+    // Log diagnostics locally only; callers receive a generic code, never internal text.
+    console.error("[sqlite-wasm] executeWasmSql failed", err);
+    throw new Error("query_failed");
   }
 }
 
