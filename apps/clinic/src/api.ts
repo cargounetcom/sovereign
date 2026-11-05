@@ -29,14 +29,10 @@ export async function apiPatients(): Promise<{ source: string; data: Patient[] }
     const j = await r.json();
     if (j.ok) return { source: 'postgres', data: j.data };
   } catch { /* fallback below */ }
-  const { INITIAL_CODE_FILES } = await import('../../../src/data/mockData');
-  return {
-    source: 'mock-fallback',
-    data: INITIAL_CODE_FILES.slice(0, 3).map((f, i) => ({
-      id: 'mock-' + i,
-      clinic_code: 'DEMO',
-      full_name: f.name,
-      dob: '1990-01-01'
-    }))
-  };
+  const DEMO: Patient[] = [
+    { id: 'demo-1', clinic_code: 'DEMO', full_name: 'Demo Patient 1', dob: '1990-01-01' },
+    { id: 'demo-2', clinic_code: 'DEMO', full_name: 'Demo Patient 2', dob: '1990-01-01' },
+    { id: 'demo-3', clinic_code: 'DEMO', full_name: 'Demo Patient 3', dob: '1990-01-01' },
+  ];
+  return { source: 'mock-fallback', data: DEMO };
 }
