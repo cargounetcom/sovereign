@@ -31,14 +31,30 @@ export async function apiLogin(login: string, password: string): Promise<{ ok: b
   }
 }
 
-export async function apiPatients(): Promise<PatientsResult> {
+export async function apiPatients(search?: string): Promise<PatientsResult> {
   try {
-    const r = await fetch(API + '/api/patients');
+    const url = API + '/api/patients' + (search && search.trim() ? '?search=' + encodeURIComponent(search.trim()) : '');
+    const r = await fetch(url);
     const j = await r.json();
     if (r.ok && j.ok) return { source: 'postgres', data: j.data ?? [], offline: false };
     return { source: 'unavailable', data: [], offline: true, error: j.error || 'API error' };
   } catch {
     // No mock fallback: never show synthetic patients as live data.
     return { source: 'unavailable', data: [], offline: true, error: 'API unreachable' };
+  }
+}
+
+export async function apiCreatePatient(fullName: string, dob: string): Promise<{ ok: boolean; error?: string; patient?: Patient }> {
+  try {
+    const r = await fetch(API + '/api/patients', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fullName, dob })
+    });
+    const j = await r.json();
+    if (r.ok && j.ok) return { ok: true, patient: j.data };
+    return { ok: false, error: j.detail || j.error || 'could not create patient' };
+  } catch {
+    return { ok: false, error: 'API unreachable' };
   }
 }

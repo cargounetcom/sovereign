@@ -56,13 +56,41 @@ export interface Patient {
   dob: string;
 }
 
-export async function listPatients(clinicCode: string): Promise<Patient[]> {
+export async function listPatients(clinicCode: string, search?: string): Promise<Patient[]> {
   return withClinic(clinicCode, async (client) => {
+    // Search is scoped inside the RLS clinic context; the pattern is bound,
+    // never concatenated into SQL.
+    const pattern = search && search.trim() ? `%${search.trim()}%` : '%';
     const r = await client.query(
-      'SELECT id, clinic_code, full_name, to_char(dob, $1) AS dob FROM patients WHERE clinic_code = $2 ORDER BY full_name',
-      ['YYYY-MM-DD', clinicCode]
+      `SELECT id, clinic_code, full_name, to_char(dob, $1) AS dob
+         FROM patients
+        WHERE clinic_code = $2 AND full_name ILIKE $3
+        ORDER BY full_name`,
+      ['YYYY-MM-DD', clinicCode, pattern]
     );
     return r.rows;
+  });
+}
+
+export async function createPatient(
+  clinicCode: string,
+  fullName: string,
+  dob: string,
+): Promise<Patient> {
+  const name = fullName.trim();
+  if (!name) throw new Error('fullName is required');
+  // Strict YYYY-MM-DD validation before it reaches DATE cast.
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dob) || Number.isNaN(Date.parse(dob))) {
+    throw new Error('dob must be YYYY-MM-DD');
+  }
+  return withClinic(clinicCode, async (client) => {
+    const r = await client.query(
+      `INSERT INTO patients (clinic_code, full_name, dob)
+       VALUES ($1, $2, $3)
+       RETURNING id, clinic_code, full_name, to_char(dob, 'YYYY-MM-DD') AS dob`,
+      [clinicCode, name, dob]
+    );
+    return r.rows[0];
   });
 }
 

@@ -6,7 +6,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { checkDb, listPatients, listAppointments, createAppointment } from '@sovereign/db/dist/index.js';
+import { checkDb, listPatients, createPatient, listAppointments, createAppointment } from '@sovereign/db/dist/index.js';
 
 const app = express();
 app.disable('x-powered-by');
@@ -62,9 +62,27 @@ app.post('/api/login', (req, res) => {
 
 app.get('/api/patients', async (req, res) => {
   try {
-    res.json({ ok: true, source: 'postgres', data: await listPatients(resolveClinicCode()) });
+    const search = typeof req.query?.search === 'string' ? req.query.search : undefined;
+    res.json({ ok: true, source: 'postgres', data: await listPatients(resolveClinicCode(), search) });
   } catch (err) {
     sendInternalError(res, 'GET /api/patients', err);
+  }
+});
+
+app.post('/api/patients', async (req, res) => {
+  const { fullName, dob } = req.body || {};
+  if (typeof fullName !== 'string' || !fullName.trim() || typeof dob !== 'string') {
+    return res.status(400).json({ error: 'fullName_and_dob_required' });
+  }
+  try {
+    const row = await createPatient(resolveClinicCode(), fullName, dob);
+    res.status(201).json({ ok: true, source: 'postgres', data: row });
+  } catch (err) {
+    // Validation errors are safe to surface; database errors are not.
+    if (err instanceof Error && (err.message === 'fullName is required' || err.message === 'dob must be YYYY-MM-DD')) {
+      return res.status(400).json({ error: 'invalid_patient_input', detail: err.message });
+    }
+    sendInternalError(res, 'POST /api/patients', err);
   }
 });
 

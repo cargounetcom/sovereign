@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { apiLogin, apiPatients, type Patient } from './api';
+import { apiLogin, apiPatients, apiCreatePatient, type Patient } from './api';
 
 // TAS12-db: Postgres main via API. Mocks = fallback if API offline.
 export default function App() {
@@ -11,6 +11,27 @@ export default function App() {
   const [source, setSource] = useState('');
   const [offline, setOffline] = useState(false);
   const [offlineDetail, setOfflineDetail] = useState('');
+  const [search, setSearch] = useState('');
+  const [newName, setNewName] = useState('');
+  const [newDob, setNewDob] = useState('');
+  const [formError, setFormError] = useState('');
+
+  async function refreshPatients(q = search) {
+    const p = await apiPatients(q);
+    setPatients(p.data);
+    setSource(p.source);
+    setOffline(p.offline);
+    setOfflineDetail(p.error || '');
+  }
+
+  async function addPatient(e: React.FormEvent) {
+    e.preventDefault();
+    setFormError('');
+    const r = await apiCreatePatient(newName, newDob);
+    if (!r.ok) { setFormError(r.error || 'could not create patient'); return; }
+    setNewName(''); setNewDob('');
+    await refreshPatients();
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -40,13 +61,29 @@ export default function App() {
           </div>
         )}
         <h2>Patients</h2>
+        <div>
+          <input
+            placeholder="Search by name"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onBlur={() => refreshPatients()}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); refreshPatients(); } }}
+          />
+          <button onClick={() => refreshPatients()}>Search</button>
+        </div>
+        <form onSubmit={addPatient} style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <input placeholder="Full name" value={newName} onChange={(e) => setNewName(e.target.value)} required />
+          <input placeholder="DOB (YYYY-MM-DD)" value={newDob} onChange={(e) => setNewDob(e.target.value)} required />
+          <button type="submit">Add patient</button>
+        </form>
+        {formError && <p style={{ color: 'red' }}>{formError}</p>}
         {patients.length === 0 && !offline && <p>No patients on record.</p>}
         <ul>
           {patients.map((p) => (
             <li key={p.id}>{p.full_name} — {p.dob}</li>
           ))}
         </ul>
-        <button onClick={() => { setAuthed(false); setLogin(''); setPassword(''); setPatients([]); setOffline(false); setOfflineDetail(''); }}>Logout</button>
+        <button onClick={() => { setAuthed(false); setLogin(''); setPassword(''); setPatients([]); setOffline(false); setOfflineDetail(''); setSearch(''); setNewName(''); setNewDob(''); setFormError(''); }}>Logout</button>
       </main>
     );
   }
