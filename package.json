@@ -2,6 +2,7 @@
   "name": "sovereign",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "npm@11.19.1",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -18,6 +19,7 @@
     "dev:api": "npm run dev --workspace @sovereign/api",
     "start:api": "npm run start --workspace @sovereign/api",
     "db:migrate": "npm run migrate --workspace @sovereign/db",
+    "db:seed": "node ./db/seed.mjs",
     "db:check": "npm run check --workspace @sovereign/db",
     "db:build": "npm run build --workspace @sovereign/db"
   },

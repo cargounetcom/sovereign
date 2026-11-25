@@ -9,6 +9,8 @@ export default function App() {
   const [error, setError] = useState('');
   const [patients, setPatients] = useState<Patient[]>([]);
   const [source, setSource] = useState('');
+  const [offline, setOffline] = useState(false);
+  const [offlineDetail, setOfflineDetail] = useState('');
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -19,6 +21,8 @@ export default function App() {
       const p = await apiPatients();
       setPatients(p.data);
       setSource(p.source);
+      setOffline(p.offline);
+      setOfflineDetail(p.error || '');
     } else {
       setError(r.error || 'login failed');
     }
@@ -29,13 +33,20 @@ export default function App() {
       <main style={{ fontFamily: 'system-ui', padding: 32 }}>
         <h1>Sovereign Clinic — dashboard</h1>
         <p>Logged in as <b>{login}</b>. Source: <b>{source}</b></p>
+        {offline && (
+          <div role="alert" style={{ border: '1px solid #b00', background: '#fff4f4', color: '#800', padding: 12, borderRadius: 6 }}>
+            <b>Offline — live data unavailable.</b> The API could not be reached
+            {offlineDetail ? ` (${offlineDetail})` : ''}. No patient data is shown.
+          </div>
+        )}
         <h2>Patients</h2>
+        {patients.length === 0 && !offline && <p>No patients on record.</p>}
         <ul>
           {patients.map((p) => (
             <li key={p.id}>{p.full_name} — {p.dob}</li>
           ))}
         </ul>
-        <button onClick={() => { setAuthed(false); setLogin(''); setPassword(''); setPatients([]); }}>Logout</button>
+        <button onClick={() => { setAuthed(false); setLogin(''); setPassword(''); setPatients([]); setOffline(false); setOfflineDetail(''); }}>Logout</button>
       </main>
     );
   }

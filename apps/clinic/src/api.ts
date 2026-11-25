@@ -1,4 +1,6 @@
-// TAS12-db: Postgres main via API (:3001). SQLite WASM + mocks = fallback/demo only.
+// TAS12-db: Postgres main via API (:3001). No silent mock fallback.
+// If the API is offline, callers receive an explicit error + offline flag so
+// the UI can show a banner instead of presenting synthetic patients as real.
 export interface Patient {
   id: string;
   clinic_code: string;
@@ -7,6 +9,13 @@ export interface Patient {
 }
 
 const API = '';
+
+export interface PatientsResult {
+  source: 'postgres' | 'unavailable';
+  data: Patient[];
+  offline: boolean;
+  error?: string;
+}
 
 export async function apiLogin(login: string, password: string): Promise<{ ok: boolean; error?: string }> {
   try {
@@ -18,21 +27,18 @@ export async function apiLogin(login: string, password: string): Promise<{ ok: b
     const j = await r.json();
     return j.ok ? { ok: true } : { ok: false, error: j.error || 'login failed' };
   } catch {
-    // TODO(TAS15): replace mock fallback with a real offline/auth strategy.
-    return { ok: false, error: 'API offline' };
+    return { ok: false, error: 'API offline — sign-in unavailable' };
   }
 }
 
-export async function apiPatients(): Promise<{ source: string; data: Patient[] }> {
+export async function apiPatients(): Promise<PatientsResult> {
   try {
     const r = await fetch(API + '/api/patients');
     const j = await r.json();
-    if (j.ok) return { source: 'postgres', data: j.data };
-  } catch { /* fallback below */ }
-  const DEMO: Patient[] = [
-    { id: 'demo-1', clinic_code: 'DEMO', full_name: 'Demo Patient 1', dob: '1990-01-01' },
-    { id: 'demo-2', clinic_code: 'DEMO', full_name: 'Demo Patient 2', dob: '1990-01-01' },
-    { id: 'demo-3', clinic_code: 'DEMO', full_name: 'Demo Patient 3', dob: '1990-01-01' },
-  ];
-  return { source: 'mock-fallback', data: DEMO };
+    if (r.ok && j.ok) return { source: 'postgres', data: j.data ?? [], offline: false };
+    return { source: 'unavailable', data: [], offline: true, error: j.error || 'API error' };
+  } catch {
+    // No mock fallback: never show synthetic patients as live data.
+    return { source: 'unavailable', data: [], offline: true, error: 'API unreachable' };
+  }
 }
