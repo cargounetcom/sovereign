@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import type { PoolClient } from 'pg';
+import { scryptSync, timingSafeEqual, randomBytes } from 'node:crypto';
 
 // Postgres main. Connection string from DATABASE_URL only — never hardcoded.
 let pool: Pool | null = null;
@@ -47,6 +48,72 @@ async function withClinic<T>(
   } finally {
     client.release();
   }
+}
+
+// ---- TAS16: authentication helpers -------------------------------------
+
+export interface AuthUser {
+  id: string;
+  clinic_code: string;
+  login: string;
+  full_name: string;
+  role: 'doctor' | 'clinic_admin';
+}
+
+// Scrypt password hash stored as: scrypt$N$r$saltHex$hashHex.
+// Formatting is done here so the API never handles raw password material.
+export function hashPassword(password: string): string {
+  const salt = randomBytes(16);
+  const derived = scryptSync(password, salt, 64, SCRYPT_OPTIONS);
+  return `scrypt$${SCRYPT_N}$${salt.toString('hex')}$${derived.toString('hex')}`;
+}
+
+const SCRYPT_N = 16384;
+const SCRYPT_OPTIONS = { N: SCRYPT_N, r: 8, p: 1 } as const;
+
+export function verifyPassword(password: string, stored: string): boolean {
+  try {
+    const [scheme, nStr, saltHex, hashHex] = stored.split('$');
+    if (scheme !== 'scrypt') return false;
+    const n = Number(nStr);
+    if (!Number.isInteger(n) || n < 1024) return false;
+    const salt = Buffer.from(saltHex, 'hex');
+    const expected = Buffer.from(hashHex, 'hex');
+    if (expected.length !== 64) return false;
+    const actual = scryptSync(password, salt, 64, { N: n, r: 8, p: 1 });
+    return expected.length === actual.length && timingSafeEqual(expected, actual);
+  } catch {
+    return false;
+  }
+}
+
+// Looks up an active doctor by login within a clinic RLS context and verifies
+// the scrypt hash. The clinic code must be supplied at login (tenant identifier);
+// for a single-clinic demo the API falls back to DEMO_CLINIC_CODE. Running this
+// inside withClinic keeps FORCE RLS satisfied and prevents cross-tenant login.
+export async function authenticateDoctor(
+  clinicCode: string,
+  login: string,
+  password: string
+): Promise<AuthUser | null> {
+  if (!clinicCode || !login || !password) return null;
+  return withClinic(clinicCode, async (client) => {
+    const r = await client.query(
+      `SELECT id, clinic_code, login, full_name, role, password_hash
+         FROM doctors
+        WHERE login = $1 AND is_active = true`,
+      [login]
+    );
+    const row = r.rows[0];
+    if (!row || !verifyPassword(password, row.password_hash)) return null;
+    return {
+      id: row.id,
+      clinic_code: row.clinic_code,
+      login: row.login,
+      full_name: row.full_name,
+      role: row.role
+    };
+  });
 }
 
 export interface Patient {
